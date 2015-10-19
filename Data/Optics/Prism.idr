@@ -1,8 +1,10 @@
 module Data.Optics.Prism
 
+import Data.Optics.Optional
+
 ||| Prism
-data Prism: Type -> Type -> Type where
-  MkPrism: (s -> Maybe a) -> (a -> s) -> Prism s a
+data Prism s a =
+  MkPrism (s -> Maybe a)  (a -> s)
 
 %name Prism prism, prism1, prism2
 
@@ -14,10 +16,10 @@ to (MkPrism f g) = f
 from: (Prism s a) -> (a -> s)
 from (MkPrism f g) = g
 
-infixr 5 +:+
+infixr 5 <:+
 ||| compose two prisms
-(+:+) : (Prism a b) -> (Prism s a) -> (Prism s b)
-(+:+) (MkPrism toB fromB) (MkPrism toA fromS) = MkPrism sb bs
+(<:+) : (Prism a b) -> (Prism s a) -> (Prism s b)
+(<:+) (MkPrism toB fromB) (MkPrism toA fromS) = MkPrism sb bs
   where
     sb: s -> Maybe b
     sb s = case (toA s) of
@@ -25,6 +27,14 @@ infixr 5 +:+
               Just a  => (toB a)
     bs: b -> s
     bs = fromS . fromB
+
+--
+-- Conversions
+---
+
+asOptional: Prism s a -> Optional s a
+asOptional (MkPrism to from) = MkOptional (to) (\s => from)
+
 
 --
 -- Functions

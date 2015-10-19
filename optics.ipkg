@@ -3,6 +3,7 @@ package optics
 modules = Data.Optics.Lens ,
           Data.Optics.Iso ,
           Data.Optics.Prism ,
+          Data.Optics.Optional , 
 
           Data.Optics.Test
 

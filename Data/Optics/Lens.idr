@@ -1,9 +1,10 @@
 module Data.Optics.Lens
 
 import Data.Morphisms
+import Data.Optics.Prism
+import Data.Optics.Optional
 
-data Lens: Type -> Type -> Type  where
-  MkLens: (s -> a) -> (s -> a -> s) -> Lens s a
+data Lens s a = MkLens (s -> a) (s -> a -> s)
 
 %name Lens lens, lens1, lens2
 
@@ -19,7 +20,7 @@ set (MkLens get set)  = set
 
 ||| modify the part of a structure
 modify: (a -> a) -> (Lens s a) -> s -> s
-modify f (MkLens getter setter) s =  setter s (f . getter $ s)
+modify f lens s =  set lens s (f . get lens $ s)
 
 ||| modify the part of a structure using an Endomorphism
 modifyE: (Endomorphism a) -> (Lens s a) -> s -> s
@@ -27,22 +28,39 @@ modifyE (Endo f) lens = modify f lens
 
 ||| modify the part of a structure using a functor to do so
 modifyF : Functor m => (a -> m a) -> (Lens s a) -> s -> m s
-modifyF f (MkLens getter setter) s = map (setter s) (f . getter $ s)
+modifyF f lens s = map (set lens s) (f . get lens $ s)
 
 ||| modify the part of a structure using a kleisli morphism
 modifyK: Monad m => (Kleislimorphism m a a) -> (Lens s a) -> (s -> m s)
-modifyK kleisli lens  = modifyF (applyKleisli kleisli) lens
+modifyK kleisli lens = modifyF (applyKleisli kleisli) lens
 
-infixr 5 +:+
+--
+-- Conversions
+--
+
+asOptional: (Lens s a ) -> (Optional s a)
+asOptional (MkLens get set) = MkOptional (\s => Just (get s)) (set)
+
+--
+--  Compositions
+--
+
+infixr 5 :+:
 ||| compose two lenses
-(+:+) : (Lens a b) -> (Lens s a) -> (Lens s b)
-(+:+) (lens2) (lens1) = MkLens newGet newSet
+(:+:) : (Lens a b) -> (Lens s a) -> (Lens s b)
+(:+:) (lens2) (lens1) = MkLens newGet newSet
   where
     newGet : s -> b
     newGet= (get lens2) . (get lens1)
 
     newSet: s -> b -> s
-    newSet s b = let a = get lens1 s
-                     newA = set lens2 a b
+    newSet s b = let a' = get lens1 s
+                     newA = set lens2 a' b
                      newS = set lens1 s newA in
                      newS
+
+infixr 5 <:+
+(<:+) : (Prism a b) -> (Lens s a) -> (Optional s b)
+(<:+) prism lens = let prismOptional = asOptional prism
+                       lensOptional = asOptional lens
+                       in prismOptional ?:+ lensOptional

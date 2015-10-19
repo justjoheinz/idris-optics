@@ -51,7 +51,7 @@ _street : Lens Address String
 _street = MkLens (\a => street a) (\a, s => record { street = s} a)
 
 _person_street : Lens Person String
-_person_street = _street +:+ _address
+_person_street = _street :+: _address
 
 testPersonNameGet : IO ()
 testPersonNameGet = assertEq (get _name p) ("Holmes")
