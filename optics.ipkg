@@ -1,0 +1,9 @@
+package optics
+
+modules = Data.Optics.Lens ,
+          Data.Optics.Iso ,
+          Data.Optics.Prism ,
+
+          Data.Optics.Test
+
+tests = Data.Optics.Test.runall
