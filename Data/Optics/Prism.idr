@@ -1,6 +1,7 @@
 module Data.Optics.Prism
 
 import Data.Optics.Optional
+import Control.Category
 
 ||| Prism
 data Prism s a =
@@ -10,23 +11,27 @@ data Prism s a =
 
 %default total
 
-to : (Prism s a) -> (s -> Maybe a)
-to (MkPrism f g) = f
+to : Prism s a -> (s -> Maybe a)
+to (MkPrism f g) s = f s
 
-from: (Prism s a) -> (a -> s)
-from (MkPrism f g) = g
+from: Prism s a -> (a -> s)
+from (MkPrism f g) a = g a
 
 infixr 5 <:+
 ||| compose two prisms
-(<:+) : (Prism a b) -> (Prism s a) -> (Prism s b)
-(<:+) (MkPrism toB fromB) (MkPrism toA fromS) = MkPrism sb bs
+(<:+) : Prism a b -> Prism s a -> Prism s b
+(<:+) p1 p2 = MkPrism newTo newFrom
   where
-    sb: s -> Maybe b
-    sb s = case (toA s) of
+    newTo: s -> Maybe b
+    newTo s = case (to p2 s) of
               Nothing => Nothing
-              Just a  => (toB a)
-    bs: b -> s
-    bs = fromS . fromB
+              Just a  => (to p1 a)
+    newFrom: b -> s
+    newFrom = with Prelude.Basics (from p2 . from p1)
+
+infixr 5 :+>
+(:+>) : Prism s a -> Prism a b -> Prism s b
+(:+>) = flip (<:+)
 
 --
 -- Conversions
@@ -72,3 +77,11 @@ just = MkPrism to from
 
     from: a -> Maybe a
     from x = Just x
+
+--
+-- instances
+--
+
+instance Category Prism where
+  id = MkPrism Just id
+  (.) = (<:+)

@@ -1,7 +1,7 @@
-module Data.Optics.Test
+module Test.Optics
 
-import Data.Optics.Lens
-import Data.Optics.Prism
+import Data.Optics
+import Control.Category
 
 assertEq : Eq a => (given : a) -> (expected : a) -> IO ()
 assertEq g e = if g == e
@@ -47,11 +47,17 @@ _name = MkLens (\p => name p) (\p,n => record { name = n} p)
 _address : Lens Person Address
 _address = MkLens (\p => address p) (\p, a => record { address = a} p)
 
+_secondary_address : Optional Person Address
+_secondary_address = MkOptional (\p => second p) (\p, a => record { second = Just a} p )
+
 _street : Lens Address String
 _street = MkLens (\a => street a) (\a, s => record { street = s} a)
 
 _person_street : Lens Person String
-_person_street = _street :+: _address
+_person_street =  _address >>> _street
+
+_secondary_street : ?holmes
+_secondary_street = _secondary_address +:? lensAsOptional _street
 
 testPersonNameGet : IO ()
 testPersonNameGet = assertEq (get _name p) ("Holmes")

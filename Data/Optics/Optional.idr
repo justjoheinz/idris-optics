@@ -1,5 +1,7 @@
 module Data.Optics.Optional
 
+import Control.Category
+
 data Optional s a =
   MkOptional (s -> Maybe a) (s -> a -> s)
 
@@ -15,10 +17,6 @@ getOrModify optional s' = case (get optional s') of
 
 set : Optional s a -> s -> a -> s
 set (MkOptional get set)  = set
-
---
--- Conversions
---
 
 --
 -- Compositions
@@ -42,3 +40,11 @@ infixr 5 ?:+
                               Just v => set2 s v
                               Nothing => s
                      in newS
+
+infixr 5 +:?
+(+:?) : Optional s a -> Optional a b -> Optional s b
+(+:?) = flip (?:+)
+
+instance Category Optional where
+  id = MkOptional Just (\a => id)
+  (.) = (?:+)

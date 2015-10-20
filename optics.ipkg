@@ -1,10 +1,11 @@
 package optics
 
-modules = Data.Optics.Lens ,
+modules = Data.Optics ,
+          Data.Optics.Lens ,
           Data.Optics.Iso ,
           Data.Optics.Prism ,
-          Data.Optics.Optional , 
+          Data.Optics.Optional ,
 
-          Data.Optics.Test
+          Test.Optics
 
-tests = Data.Optics.Test.runall
+tests = Test.Optics.runall
