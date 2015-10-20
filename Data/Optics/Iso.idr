@@ -25,8 +25,11 @@ modify f (MkIso to from) s = (from . f . to ) s
 -- Conversions
 --
 
-asOptional: (Prism s a) -> (Optional s a)
-asOptional (MkPrism to from) = MkOptional (\s => to s) (\s,a => from a)
+asPrism: (Iso s a) -> (Prism s a)
+asPrism (MkIso to from) = MkPrism (\s => Just (to s)) (\a => from a)
+
+asOptional: (Iso s a) -> (Optional s a)
+asOptional (MkIso to from) = MkOptional (\s =>  Just(to s)) (\s,a => from a)
 
 --
 -- Compositions
