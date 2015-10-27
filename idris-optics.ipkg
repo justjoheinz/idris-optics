@@ -1,0 +1,13 @@
+package idrisoptics
+
+modules = Data.Optics ,
+          Data.Optics.Lens ,
+          Data.Optics.Iso ,
+          Data.Optics.Prism ,
+          Data.Optics.Optional ,
+
+          Test.Optics
+
+opts = "-p idrisunit"
+
+tests = Test.Optics.runall
