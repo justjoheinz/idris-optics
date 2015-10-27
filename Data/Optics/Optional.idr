@@ -1,7 +1,6 @@
 module Data.Optics.Optional
 
-import Control.Category
-
+||| Optional
 data Optional s a =
   MkOptional (s -> Maybe a) (s -> a -> s)
 
@@ -22,10 +21,10 @@ set (MkOptional get set)  = set
 -- Compositions
 --
 
-infixr 5 ?:+
+infixr 9 ?:+
 ||| compose two optionals
 (?:+): Optional a b -> Optional s a -> Optional s b
-(?:+) (MkOptional get1 set1) (MkOptional get2 set2) = MkOptional newGet newSet
+(MkOptional get1 set1) ?:+ (MkOptional get2 set2) = MkOptional newGet newSet
   where
     newGet: s -> Maybe b
     newGet s = do a <- get2 s
@@ -41,10 +40,6 @@ infixr 5 ?:+
                               Nothing => s
                      in newS
 
-infixr 5 +:?
+infixr 9 +:?
 (+:?) : Optional s a -> Optional a b -> Optional s b
 (+:?) = flip (?:+)
-
-instance Category Optional where
-  id = MkOptional Just (\a => id)
-  (.) = (?:+)

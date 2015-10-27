@@ -1,22 +1,13 @@
 module Test.Optics
 
+import UnitTest
 import Data.Optics
 import Control.Category
 
-assertEq : Eq a => (given : a) -> (expected : a) -> IO ()
-assertEq g e = if g == e
-    then putStrLn "Test Passed"
-    else putStrLn "Test Failed"
-
-assertNotEq : Eq a => (given : a) -> (expected : a) -> IO ()
-assertNotEq g e = if not (g == e)
-    then putStrLn "Test Passed"
-    else putStrLn "Test Failed"
+PLZ : Type
+PLZ = Integer
 
 mutual
-  PLZ : Type
-  PLZ = Integer
-
   record Person where
     constructor MkPerson
     name : String
@@ -34,6 +25,12 @@ mutual
 
   instance Eq Address where
     (==) (MkAddress street plz city) (MkAddress x y z) = (street == x) && (plz == y) && (city == z)
+
+  instance Show Person where
+    show p = "Person(" ++ name p ++ ")"
+
+  instance Show Address where
+    show a = "Address(" ++ street a ++ ")"
 
 hamburg: Address
 hamburg = MkAddress "Elbchaussee" 2000 "Hamburg"
@@ -56,20 +53,20 @@ _street = MkLens (\a => street a) (\a, s => record { street = s} a)
 _person_street : Lens Person String
 _person_street =  _address >>> _street
 
-_secondary_street : ?holmes
+_secondary_street : Optional Person String
 _secondary_street = _secondary_address +:? lensAsOptional _street
 
 testPersonNameGet : IO ()
-testPersonNameGet = assertEq (get _name p) ("Holmes")
+testPersonNameGet = assertEq "the _name lens can get the name of a person" (get _name p) ("Holmes")
 
 testPersonNameSet : IO ()
-testPersonNameSet = assertEq (set _name p "Watson") ( record { name = "Watson"} p)
+testPersonNameSet = assertEq "the _name lens can set the name of a person" (set _name p "Watson") ( record { name = "Watson"} p)
 
 testPersonAddressStreetGet : IO ()
-testPersonAddressStreetGet = assertEq (get _person_street p) ("Elbchaussee")
+testPersonAddressStreetGet = assertEq "the composed _person_street lens can get the name of the street" (get _person_street p) ("Elbchaussee")
 
 testModifyF : IO ()
-testModifyF = assertEq (modifyF (\n => Just n) _name p) (Just p)
+testModifyF = assertEq "modifyF can modify a value using a functor"(modifyF (\n => Just n) _name p) (Just p)
 
 
 runall : IO()

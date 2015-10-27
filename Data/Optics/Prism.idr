@@ -1,8 +1,5 @@
 module Data.Optics.Prism
 
-import Data.Optics.Optional
-import Control.Category
-
 ||| Prism
 data Prism s a =
   MkPrism (s -> Maybe a)  (a -> s)
@@ -17,10 +14,10 @@ to (MkPrism f g) s = f s
 from: Prism s a -> (a -> s)
 from (MkPrism f g) a = g a
 
-infixr 5 <:+
+infixr 9 <:+
 ||| compose two prisms
 (<:+) : Prism a b -> Prism s a -> Prism s b
-(<:+) p1 p2 = MkPrism newTo newFrom
+p1 <:+ p2 = MkPrism newTo newFrom
   where
     newTo: s -> Maybe b
     newTo s = case (to p2 s) of
@@ -29,17 +26,9 @@ infixr 5 <:+
     newFrom: b -> s
     newFrom = with Prelude.Basics (from p2 . from p1)
 
-infixr 5 :+>
+infixr 9 :+>
 (:+>) : Prism s a -> Prism a b -> Prism s b
 (:+>) = flip (<:+)
-
---
--- Conversions
----
-
-asOptional: Prism s a -> Optional s a
-asOptional (MkPrism to from) = MkOptional (to) (\s => from)
-
 
 --
 -- Functions
@@ -77,11 +66,3 @@ just = MkPrism to from
 
     from: a -> Maybe a
     from x = Just x
-
---
--- instances
---
-
-instance Category Prism where
-  id = MkPrism Just id
-  (.) = (<:+)
